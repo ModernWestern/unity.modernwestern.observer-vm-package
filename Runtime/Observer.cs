@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace ModernWestern.UI.ObserverMV
 {
-    [CreateAssetMenu(menuName = "ModernWestern/ObserverMV/Observer")]
+    [CreateAssetMenu(menuName = "ModernWestern/ObserverVM/Observer")]
     public class Observer : ScriptableObject
     {
         private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
