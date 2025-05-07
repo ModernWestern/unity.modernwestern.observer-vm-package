@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-namespace ModernWestern.UI.ObserverMV.Drawers
+namespace ModernWestern.UI.ObserverVM.Drawers
 {
     [CustomPropertyDrawer(typeof(BindableAttribute))]
     public class BindableAttributeDrawer : PropertyDrawer

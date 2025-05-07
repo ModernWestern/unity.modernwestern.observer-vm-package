@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace ModernWestern.UI.ObserverMV
+namespace ModernWestern.UI.ObserverVM
 {
     [CreateAssetMenu(menuName = "ModernWestern/ObserverVM/Observer")]
     public class Observer : ScriptableObject

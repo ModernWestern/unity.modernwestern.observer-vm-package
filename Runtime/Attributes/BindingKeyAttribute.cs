@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace ModernWestern.UI.ObserverMV
+namespace ModernWestern.UI.ObserverVM
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class BindableAttribute : PropertyAttribute

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
-namespace ModernWestern.UI.ObserverMV
+namespace ModernWestern.UI.ObserverVM
 {
     public class BindingRegistry
     {
