@@ -10,7 +10,7 @@ namespace ModernWestern.UI.ObserverVM.Drawers
         {
             var key = ((BindableAttribute)attribute).Key;
 
-            var displayKey = string.IsNullOrEmpty(key) ? property.name : key;
+            var displayKey = string.IsNullOrEmpty(key) ? property.displayName : key;
 
             var labelWidth = EditorGUIUtility.labelWidth;
 
