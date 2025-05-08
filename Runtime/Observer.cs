@@ -59,15 +59,8 @@ namespace ModernWestern.UI.ObserverVM
                 }
 
                 var key = string.IsNullOrEmpty(attribute.Key) ? field.Name : attribute.Key;
-
-                if (attribute.HasBindingKey)
-                {
-                    Bind(attribute.BindingKey, component);
-                }
-                else
-                {
-                    Bind(key, component);
-                }
+                
+                Bind(key, component);
 
                 var strategy = _registry?.GetStrategy(component);
 
