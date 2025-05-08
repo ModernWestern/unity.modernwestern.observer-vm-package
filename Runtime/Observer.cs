@@ -10,7 +10,9 @@ namespace ModernWestern.UI.ObserverVM
     {
         private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-        private readonly Dictionary<string, Component> _bindings = new();
+        private readonly Dictionary<string, Component> _stringBindings = new();
+
+        private readonly Dictionary<int, Component> _hashBindings = new();
 
         private Action<string, object> _onViewChanged;
 
@@ -26,14 +28,21 @@ namespace ModernWestern.UI.ObserverVM
             _registry = null;
         }
 
-        public void Bind(string key, Component component)
+        public void Bind(BindingKey key, Component target)
         {
-            _bindings[key] = component;
+            _hashBindings[key.GetHashCode()] = target;
+        }
+
+        public void Bind(string key, Component target)
+        {
+            _stringBindings[key] = target;
         }
 
         public void AutoBind(MonoBehaviour target)
         {
-            _bindings.Clear();
+            _hashBindings.Clear();
+
+            _stringBindings.Clear();
 
             var fields = target.GetType().GetFields(Flags);
 
@@ -51,7 +60,14 @@ namespace ModernWestern.UI.ObserverVM
 
                 var key = string.IsNullOrEmpty(attribute.Key) ? field.Name : attribute.Key;
 
-                Bind(key, component);
+                if (attribute.HasBindingKey)
+                {
+                    Bind(attribute.BindingKey, component);
+                }
+                else
+                {
+                    Bind(key, component);
+                }
 
                 var strategy = _registry?.GetStrategy(component);
 
@@ -62,9 +78,21 @@ namespace ModernWestern.UI.ObserverVM
             }
         }
 
+        public void UpdateValue(BindingKey key, object value)
+        {
+            if (!_hashBindings.TryGetValue(key.GetHashCode(), out var target))
+            {
+                return;
+            }
+
+            var strategy = _registry?.GetStrategy(target);
+
+            strategy?.UpdateBinding(target, value);
+        }
+
         public void UpdateValue(string key, object value)
         {
-            if (!_bindings.TryGetValue(key, out var component))
+            if (!_stringBindings.TryGetValue(key, out var component))
             {
                 return;
             }

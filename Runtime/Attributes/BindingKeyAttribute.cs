@@ -6,11 +6,26 @@ namespace ModernWestern.UI.ObserverVM
     [AttributeUsage(AttributeTargets.Field)]
     public class BindableAttribute : PropertyAttribute
     {
-        public string Key;
+        public readonly BindingKey BindingKey;
 
-        public BindableAttribute(string key = null)
+        public bool HasBindingKey { get; }
+
+        public string Key { get; }
+
+        public BindableAttribute(string key)
         {
+            HasBindingKey = false;
+
             Key = key;
+        }
+
+        public BindableAttribute(BindingKey bindingKey)
+        {
+            BindingKey = bindingKey;
+
+            HasBindingKey = true;
+
+            Key = bindingKey.Key;
         }
     }
 }
