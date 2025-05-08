@@ -1,6 +1,6 @@
 {
   "name": "com.modernwestern.observer-vm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "ObserverVM",
   "description": "ObserverVM is a lightweight and extensible data binding system for Unity's UI (UGUI). \nIt bridges the gap between the ViewModel and the UI View by automating the flow of data,\neither one-way (ViewModel \u2192 UI) or two-way (UI \u2192 ViewModel).",
   "unity": "2019.2",

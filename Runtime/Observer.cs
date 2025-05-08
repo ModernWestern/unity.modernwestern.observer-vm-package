@@ -58,15 +58,18 @@ namespace ModernWestern.UI.ObserverVM
                     continue;
                 }
 
-                var key = string.IsNullOrEmpty(attribute.Key) ? field.Name : attribute.Key;
-                
-                Bind(key, component);
+                if (attribute.IsManuallyBound)
+                {
+                    continue;
+                }
+
+                Bind(attribute.Key, component);
 
                 var strategy = _registry?.GetStrategy(component);
 
                 if (strategy is IBidirectionalBindingStrategy bidirectionalStrategy)
                 {
-                    bidirectionalStrategy?.BindViewEvent(component, OnViewChangedInternal, key);
+                    bidirectionalStrategy?.BindViewEvent(component, OnViewChangedInternal, attribute.Key);
                 }
             }
         }
@@ -75,6 +78,7 @@ namespace ModernWestern.UI.ObserverVM
         {
             if (!_hashBindings.TryGetValue(key.GetHashCode(), out var target))
             {
+                Debug.LogWarning($"Trying to update a non-existent bindingKey for key: {key.Key} Hash: {key.GetHashCode()}");
                 return;
             }
 
@@ -87,6 +91,7 @@ namespace ModernWestern.UI.ObserverVM
         {
             if (!_stringBindings.TryGetValue(key, out var component))
             {
+                Debug.LogWarning($"Trying to update a non-existent binding for key: {key}");
                 return;
             }
 

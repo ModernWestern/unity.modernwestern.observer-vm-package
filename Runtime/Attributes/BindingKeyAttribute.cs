@@ -8,9 +8,20 @@ namespace ModernWestern.UI.ObserverVM
     {
         public readonly string Key;
 
+        public readonly bool IsManuallyBound;
+
         public BindableAttribute(string key)
         {
+            IsManuallyBound = false;
+
             Key = key;
+        }
+
+        public BindableAttribute()
+        {
+            IsManuallyBound = true;
+            
+            Key = null;
         }
     }
 }
