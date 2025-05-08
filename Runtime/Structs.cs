@@ -10,7 +10,7 @@ namespace ModernWestern.UI.ObserverVM
 
         public BindingKey(string key)
         {
-            Hash = Animator.StringToHash(key);
+            Hash = Animator.StringToHash($"observer-vm-{key}");
             Key = key;
         }
 
