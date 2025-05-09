@@ -70,7 +70,7 @@ public class TextBindingStrategy : IBindingStrategy
 ### Two-way `IBidirectionalBindingStrategy`
 
 ```csharp
- public class SliderBindingStrategy : IBidirectionalBindingStrategy
+public class SliderBindingStrategy : IBidirectionalBindingStrategy
 {
     public bool Supports(Component component) => component is Slider;
 
