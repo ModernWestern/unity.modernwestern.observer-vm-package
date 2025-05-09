@@ -17,13 +17,12 @@ void Awake()
         new ButtonBindingStrategy())
     };
     
-    registry.Register(strategies);
-    
     // Add more strategies as needed...
 
     Observer.Init(registry);
 }
 ```
+
 ⚠️ `Observer.Init()` is mandatory. If not called, no bindings will be functional. Only call once.
 
 ### 2. Core Components
@@ -141,6 +140,7 @@ public class PlayerViewModel : MonoBehaviour
     }
 }
 ```
+
 ## 🆕 What’s New in Version 1.1.0
 
 ### 1. ⚡ BindingKey: Strongly-Typed, Hashed Bind Keys
