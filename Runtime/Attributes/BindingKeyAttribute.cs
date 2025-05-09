@@ -1,27 +1,16 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ModernWestern.UI.ObserverVM
 {
-    [AttributeUsage(AttributeTargets.Field)]
     public class BindableAttribute : PropertyAttribute
     {
+        public bool IsManuallyBound => string.IsNullOrEmpty(Key);
+
         public readonly string Key;
 
-        public readonly bool IsManuallyBound;
-
-        public BindableAttribute(string key)
+        public BindableAttribute(string key = null)
         {
-            IsManuallyBound = false;
-
             Key = key;
-        }
-
-        public BindableAttribute()
-        {
-            IsManuallyBound = true;
-            
-            Key = null;
         }
     }
 }

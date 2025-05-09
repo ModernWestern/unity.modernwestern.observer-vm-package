@@ -31,11 +31,15 @@ namespace ModernWestern.UI.ObserverVM
         public void Bind(BindingKey key, Component target)
         {
             _hashBindings[key.GetHashCode()] = target;
+            
+            FoundStrategy_Internal(key.Key, target);
         }
 
         public void Bind(string key, Component target)
         {
             _stringBindings[key] = target;
+
+            FoundStrategy_Internal(key, target);
         }
 
         public void AutoBind(MonoBehaviour target)
@@ -64,13 +68,6 @@ namespace ModernWestern.UI.ObserverVM
                 }
 
                 Bind(attribute.Key, component);
-
-                var strategy = _registry?.GetStrategy(component);
-
-                if (strategy is IBidirectionalBindingStrategy bidirectionalStrategy)
-                {
-                    bidirectionalStrategy?.BindViewEvent(component, OnViewChangedInternal, attribute.Key);
-                }
             }
         }
 
@@ -105,9 +102,23 @@ namespace ModernWestern.UI.ObserverVM
             _onViewChanged = callback;
         }
 
-        private void OnViewChangedInternal(string key, object value)
+#region Internal
+
+        private void OnViewChanged_Internal(string key, object value)
         {
             _onViewChanged?.Invoke(key, value);
         }
+
+        private void FoundStrategy_Internal(string key, Component target)
+        {
+            var strategy = _registry?.GetStrategy(target);
+
+            if (strategy is IBidirectionalBindingStrategy bidirectionalStrategy)
+            {
+                bidirectionalStrategy?.BindViewEvent(target, OnViewChanged_Internal, key);
+            }
+        }
+
+#endregion
     }
 }

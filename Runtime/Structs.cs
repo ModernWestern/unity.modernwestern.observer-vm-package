@@ -6,11 +6,12 @@ namespace ModernWestern.UI.ObserverVM
     public readonly struct BindingKey : IEquatable<BindingKey>
     {
         public readonly int Hash;
+        
         public readonly string Key;
 
         public BindingKey(string key)
         {
-            Hash = Animator.StringToHash($"observer-vm-{key}");
+            Hash = Animator.StringToHash($"observer-vm-{key.ToLower()}");
             Key = key;
         }
 

@@ -25,10 +25,9 @@ namespace ModernWestern.UI.ObserverVM.Drawers
                 richText = true
             };
 
-            EditorGUI.LabelField(labelRect, $"<color=green><Bind></color> {displayKey}", richLabel);
+            EditorGUI.LabelField(labelRect, $"<color=green>[Bind]></color> {displayKey}", richLabel);
 
             EditorGUI.PropertyField(fieldRect, property, GUIContent.none);
         }
     }
-
 }
