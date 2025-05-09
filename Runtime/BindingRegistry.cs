@@ -8,6 +8,16 @@ namespace ModernWestern.UI.ObserverVM
     {
         private readonly List<IBindingStrategy> _strategies = new();
 
+        public BindingRegistry(IBindingStrategy strategy)
+        {
+            Register(strategy);
+        }
+
+        public BindingRegistry(params IBindingStrategy[] strategies)
+        {
+            Register(strategies);
+        }
+
         public void Register(IBindingStrategy strategy)
         {
             _strategies.Add(strategy);
