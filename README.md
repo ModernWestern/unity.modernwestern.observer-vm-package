@@ -10,24 +10,26 @@ Before using Observer, you must call `Observer.Init()` with a BindingRegistry in
 ```csharp
 void Awake()
 {
-    var registry = new BindingRegistry();
+    var strategies = new BindingRegistry
+    {
+        new TextBindingStrategy(), 
+        new SliderBindingStrategy(),
+        new ButtonBindingStrategy())
+    };
     
-    registry.Register(new TextBindingStrategy(), 
-                      new SliderBindingStrategy(),
-                      new ButtonBindingStrategy());
+    registry.Register(strategies);
     
     // Add more strategies as needed...
 
     Observer.Init(registry);
 }
-
 ```
 ⚠️ `Observer.Init()` is mandatory. If not called, no bindings will be functional. Only call once.
 
 ### 2. Core Components
 
 | Component         | Description                                                              |
-|-------------------| ------------------------------------------------------------------------ |
+|-------------------|--------------------------------------------------------------------------|
 | Observer          | Central class that manages binding between ViewModel and View            |
 | BindableAttribute | Attribute used to mark fields that should be bound                       |
 | IBindingStrategy  | Interface that defines how to update a UI component                      |
@@ -120,7 +122,6 @@ public class PlayerUI : MonoBehaviour
         }
     }
 }
-
 ```
 
 ### ViewModel

@@ -31,7 +31,7 @@ namespace ModernWestern.UI.ObserverVM
         public void Bind(BindingKey key, Component target)
         {
             _hashBindings[key.GetHashCode()] = target;
-            
+
             FoundStrategy_Internal(key.Key, target);
         }
 

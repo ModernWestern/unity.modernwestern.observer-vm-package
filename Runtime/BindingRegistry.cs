@@ -1,43 +1,33 @@
 ﻿using UnityEngine;
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ModernWestern.UI.ObserverVM
 {
-    public class BindingRegistry
+    public class BindingRegistry : IEnumerable<IBindingStrategy>
     {
         private readonly List<IBindingStrategy> _strategies = new();
 
-        public BindingRegistry(IBindingStrategy strategy)
-        {
-            Register(strategy);
-        }
-
-        public BindingRegistry(params IBindingStrategy[] strategies)
-        {
-            Register(strategies);
-        }
-
-        public void Register(IBindingStrategy strategy)
+        public void Add(IBindingStrategy strategy)
         {
             _strategies.Add(strategy);
         }
 
-        public void Register(params IBindingStrategy[] strategies)
-        {
-            _strategies.AddRange(strategies);
-        }
-
         public IBindingStrategy GetStrategy(Component component)
         {
-            foreach (var strategy in _strategies.Where(strategy => strategy.Supports(component)))
+            var strategy = _strategies.FirstOrDefault(s => s.Supports(component));
+
+            if (strategy == null)
             {
-                return strategy;
+                Debug.LogWarning($"No strategy found for component {component.GetType().Name}");
             }
 
-            Debug.LogWarning($"No strategy found for component {component.GetType().Name}");
-
-            return null;
+            return strategy;
         }
+
+        public IEnumerator<IBindingStrategy> GetEnumerator() => _strategies.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
