@@ -54,45 +54,45 @@ To support a new UI component type (e.g., Button, Toggle, Image), implement the 
 
 ```csharp
 public class TextBindingStrategy : IBindingStrategy
-    {
-        public bool Supports(Component component) => component is TMP_Text;
+{
+    public bool Supports(Component component) => component is TMP_Text;
 
-        public void UpdateBinding(Component component, object value)
+    public void UpdateBinding(Component component, object value)
+    {
+        if (component is TMP_Text text && value is string str)
         {
-            if (component is TMP_Text text && value is string str)
-            {
-                text.text = str;
-            }
+            text.text = str;
         }
     }
+}
 ```
 
 ### Two-way `IBidirectionalBindingStrategy`
 
 ```csharp
  public class SliderBindingStrategy : IBidirectionalBindingStrategy
-    {
-        public bool Supports(Component component) => component is Slider;
+{
+    public bool Supports(Component component) => component is Slider;
 
-        public void UpdateBinding(Component component, object value)
+    public void UpdateBinding(Component component, object value)
+    {
+        if (component is Slider slider && value is float f)
         {
-            if (component is Slider slider && value is float f)
-            {
-                slider.SetValueWithoutNotify(f);
-            }
-        }
-        
-        public void BindViewEvent(Component component, Action<string, object> onViewChanged, string key)
-        {
-            if (component is Slider slider)
-            {
-                slider.onValueChanged.AddListener(value =>
-                {
-                    onViewChanged?.Invoke(key, value);
-                });
-            }
+            slider.SetValueWithoutNotify(f);
         }
     }
+        
+    public void BindViewEvent(Component component, Action<string, object> onViewChanged, string key)
+    {
+        if (component is Slider slider)
+        {
+            slider.onValueChanged.AddListener(value =>
+            {
+                onViewChanged?.Invoke(key, value);
+            });
+        }
+    }
+}
 ```
 
 ## 💡 Example Use Case
