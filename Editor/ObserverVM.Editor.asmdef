@@ -1,0 +1,18 @@
+{
+    "name": "ObserverVM.Editor",
+    "rootNamespace": "ModernWestern.UI.ObserverVM.Drawers",
+    "references": [
+        "ObserverVM"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

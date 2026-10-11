@@ -1,198 +1,189 @@
-# 📘 ObserverVM – Unity UI Data Binding Framework
-ObserverVM is a lightweight and extensible data binding system for Unity's UI (UGUI). It bridges the gap between the ViewModel and the UI View by automating the flow of data — either one-way (ViewModel → UI) or two-way (UI → ViewModel).
+# ObserverVM
 
-## 🚀 Getting Started
+Zero-allocation, strongly typed MVVM bindings for Unity UI (UGUI + TextMeshPro), inspired by Unreal's UMG.
 
-### 1. Initialization
+- **Views** derive from `Widget<TViewModel>` (≈ `UUserWidget`) and mark their UI with `[BindWidget]`.
+- **ViewModels** are plain classes that expose `Observable<T>` properties and `Command`s. They know nothing about the UI.
+- **Bindings** are declared once in `OnBind` with `Bind.Text`, `Bind.Value`, `Bind.Click`...
+- **No GC**: changing values, user input, unbinding and re-binding a widget to another ViewModel allocate nothing.
+- **Type safe**: binding a `float` to a text or a `string` to a slider does not compile.
 
-Before using Observer, you must call `Observer.Init()` with a BindingRegistry instance that contains all registered binding strategies.
+| Unreal (UMG) | ObserverVM |
+|---|---|
+| `UUserWidget` | `Widget<TViewModel>` |
+| `meta=(BindWidget)` / `BindWidgetOptional` | `[BindWidget]` / `[BindWidget(Optional = true)]` |
+| ViewModel with `FieldNotify` properties | class with `Observable<T>` properties |
+| View bindings | `OnBind(viewModel)` + `Bind.*` |
+| `SetViewModel` | `SetViewModel` |
+| Button `OnClicked` → ViewModel function | `Command` + `Bind.Click` |
 
-```csharp
-void Awake()
-{
-    var strategies = new BindingRegistry
-    {
-        new TextBindingStrategy(), 
-        new SliderBindingStrategy(),
-        new ButtonBindingStrategy())
-    };
-    
-    // Add more strategies as needed...
+## Installation
 
-    Observer.Init(registry);
-}
+Package Manager → **Add package from git URL**:
+
+```
+https://github.com/ModernWestern/unity.modernwestern.observer-vm-package.git
 ```
 
-⚠️ `Observer.Init()` is mandatory. If not called, no bindings will be functional. Only call once.
+Requires Unity 2021.3+ and UGUI. TextMeshPro bindings are enabled automatically when TextMeshPro is installed (always the case in Unity 6).
 
-### 2. Core Components
-
-| Component         | Description                                                              |
-|-------------------|--------------------------------------------------------------------------|
-| Observer          | Central class that manages binding between ViewModel and View            |
-| BindableAttribute | Attribute used to mark fields that should be bound                       |
-| IBindingStrategy  | Interface that defines how to update a UI component                      |
-| BindingRegistry   | Container that maps UI components to their associated `IBindingStrategy` |
-| BindingKey        | Strongly-typed, hashable key for optimized binding instead of strings    |
-
-
-## 💡 How It Works
-
-You annotate UI components in your MonoBehaviour using the `[Bindable("KeyName")]` attribute.
-
-You call `observer.AutoBind(this)` to collect those references automatically.
-
-You use `observer.UpdateValue("KeyName", value)` to push values to the UI.
-
-⚠️ For `IBidirectionalBindingStrategy` strategies you call `observer.SubscribeViewChanges()` to receive values when the user interacts with the UI.
-
-## 🧱 Creating a Custom Strategy
-
-To support a new UI component type (e.g., Button, Toggle, Image), implement the `IBindingStrategy` or `IBidirectionalBindingStrategy` interface:
-
-### One-way `IBindingStrategy`
-
-```csharp
-public class TextBindingStrategy : IBindingStrategy
-{
-    public bool Supports(Component component) => component is TMP_Text;
-
-    public void UpdateBinding(Component component, object value)
-    {
-        if (component is TMP_Text text && value is string str)
-        {
-            text.text = str;
-        }
-    }
-}
-```
-
-### Two-way `IBidirectionalBindingStrategy`
-
-```csharp
-public class SliderBindingStrategy : IBidirectionalBindingStrategy
-{
-    public bool Supports(Component component) => component is Slider;
-
-    public void UpdateBinding(Component component, object value)
-    {
-        if (component is Slider slider && value is float f)
-        {
-            slider.SetValueWithoutNotify(f);
-        }
-    }
-        
-    public void BindViewEvent(Component component, Action<string, object> onViewChanged, string key)
-    {
-        if (component is Slider slider)
-        {
-            slider.onValueChanged.AddListener(value =>
-            {
-                onViewChanged?.Invoke(key, value);
-            });
-        }
-    }
-}
-```
-
-## 💡 Example Use Case
-
-### View
-
-```csharp
-public class PlayerUI : MonoBehaviour
-{
-    public Observer observer;
-
-    [Bindable("Nickname")] public TMP_Text nicknameText;
-    [Bindable("Score")] public Slider scoreSlider;
-
-    void Start()
-    {
-        observer.AutoBind(this);
-        observer.SubscribeViewChanges(OnUIChanged);
-    }
-
-    void OnUIChanged(string key, object value)
-    {
-        if (key == "Score" && value is float score)
-        {
-            Debug.Log($"User changed score to {score}");
-        }
-    }
-}
-```
+## Quick start
 
 ### ViewModel
 
 ```csharp
-public class PlayerViewModel : MonoBehaviour
+public sealed class PlayerViewModel
 {
-    [SerializeField] private Observer observer;
+    private readonly Observable<float> _health = new(1f);
 
-    [SerializeField] private string nickname;
-    [SerializeField] private float score;
-
-    public void RefreshUI()
+    public PlayerViewModel(string nickname)
     {
-        observer.UpdateValue("Nickname", nickname);
-        observer.UpdateValue("Score", score);
+        Nickname = new Observable<string>(nickname);
+        Respawn = new Command(OnRespawn, canExecute: false);
     }
+
+    public Observable<string> Nickname { get; }
+    public IReadOnlyObservable<float> Health => _health;   // read-only: widgets can only display it
+    public Observable<int> Score { get; } = new();
+    public Observable<float> Volume { get; } = new(0.8f);  // writable: a Slider bound to it is two-way
+    public Command Respawn { get; }
+
+    public void TakeDamage(float amount)
+    {
+        _health.Value = Mathf.Max(0f, _health.Value - amount);
+        Respawn.CanExecute.Value = _health.Value <= 0f;
+    }
+
+    private void OnRespawn() => _health.Value = 1f;
 }
 ```
 
-## 🆕 What’s New in Version 1.1.0
-
-### 1. ⚡ BindingKey: Strongly-Typed, Hashed Bind Keys
-
-Version `1.1.0` introduces `BindingKey`, a strongly-typed and hashable class to replace strings for binding keys. This provides a performance improvement by avoiding string comparisons at runtime.
-
-### Declaring a `BindingKey`
+### Widget (the View)
 
 ```csharp
-public readonly static BindingKey HealthBar = new("PlayerHealthBar");
+public sealed class PlayerHUD : Widget<PlayerViewModel>
+{
+    [SerializeField, BindWidget] private TMP_Text nickname;
+    [SerializeField, BindWidget] private TMP_Text score;
+    [SerializeField, BindWidget] private Image healthBar;
+    [SerializeField, BindWidget] private Slider volume;
+    [SerializeField, BindWidget] private Button respawn;
+
+    protected override void OnBind(PlayerViewModel viewModel)
+    {
+        Bind.Text(nickname, viewModel.Nickname);
+        Bind.Text(score, viewModel.Score, "Score {0}");  // numbers to text without creating strings
+        Bind.Fill(healthBar, viewModel.Health);
+        Bind.Value(volume, viewModel.Volume);            // two-way
+        Bind.Click(respawn, viewModel.Respawn);          // also keeps button.interactable = CanExecute
+
+        // Custom binding: a static lambda plus the state it needs, so nothing is captured.
+        Bind.To(viewModel.Health, this, static (self, health) => self.OnHealthChanged(health));
+    }
+
+    private void OnHealthChanged(float health) { /* ... */ }
+}
 ```
 
-### Manual Binding with `BindingKey`
+### Gameplay
 
 ```csharp
-[SerializeField]
-private Image healthBar;
-
-observer.Bind(HealthBar, healthBar);
+var player = new PlayerViewModel("Player");
+hud.SetViewModel(player);   // binds; calling it again with another ViewModel re-binds, null unbinds
+player.TakeDamage(0.1f);    // the HUD updates, no allocations
 ```
 
-### Optional: Use `[Bindable]` for Visual Marking in Inspector
+Bindings are removed automatically when the ViewModel changes or the widget is destroyed. Override `OnUnbind(viewModel)` for extra cleanup; if you override `OnDestroy`, call `base.OnDestroy()`.
 
-Even though it's not required when using `BindingKey`, you may still decorate fields with `[Bindable]` (without a name) to mark them visually in the Unity Inspector.
+The **Basic HUD** sample (Package Manager → ObserverVM → Samples) contains the complete example.
+
+## Bindings
+
+Input widgets are **two-way** when given an `Observable<T>` and **one-way** when given an `IReadOnlyObservable<T>`. Use `.AsReadOnly()` to force one-way.
+
+| Binding | Widget | Source |
+|---|---|---|
+| `Bind.Text` | `Text`, `TMP_Text` | `string` |
+| `Bind.Text(label, source, "format")` | `TMP_Text` | `int`, `float` (e.g. `"{0}"`, `"{0:2}"`, `"HP {0:0}"`) |
+| `Bind.Fill` | `Image` | `float` |
+| `Bind.Sprite` | `Image` | `Sprite` |
+| `Bind.Color` | `Graphic` (Image, Text, TMP_Text...) | `Color` |
+| `Bind.Interactable` | `Selectable` | `bool` |
+| `Bind.Active` | `GameObject`, `Component` | `bool` |
+| `Bind.Alpha` | `CanvasGroup` | `float` |
+| `Bind.Value` | `Slider`, `Scrollbar` | `float` (two-way) |
+| `Bind.Value` | `Dropdown`, `TMP_Dropdown` | `int` (two-way) |
+| `Bind.IsOn` | `Toggle` | `bool` (two-way) |
+| `Bind.Text` | `InputField`, `TMP_InputField` | `string` (two-way) |
+| `Bind.Click` | `Button` | `Command` |
+| `Bind.To` | anything | any `T`, with a `static` lambda |
+| `Bind.Event` | any `UnityEvent<T>` / `UnityEvent` | `Observable<T>` / `Command` (View → ViewModel) |
+
+### Your own bindings
+
+Bindings are extension methods on `BindingScope`, so adding one is a one-liner:
 
 ```csharp
-[Bindable, SerializeField]
-private Image healthBar;
+public static class MyBindings
+{
+    public static void Width(this BindingScope bind, RectTransform rect, IReadOnlyObservable<float> source)
+    {
+        bind.To(source, rect, static (target, width) => target.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width));
+    }
+}
 
-observer.Bind(HealthBar, healthBar);
+// In OnBind:
+Bind.Width(panel, viewModel.PanelWidth);
 ```
 
-️️️️⚠️ If you provide a name inside `[Bindable("SomeName")]`, the variable will be registered via `observer.AutoBind()` using that name.
+## Zero allocations
 
-### Updating a Bound UI Element
+**Allocation-free** (verified by `Tests/Runtime/ZeroGcTests.cs` with Unity's `Is.Not.AllocatingGCMemory()`, in the Editor and in a Windows player):
 
-```csharp
-observer.UpdateValue(HealthBar, value);
+- changing a ViewModel value, with any number of bindings;
+- user input flowing back to the ViewModel (sliders, toggles, dropdowns, buttons);
+- unbinding (`SetViewModel(null)`, destroying the widget);
+- re-binding a widget to a ViewModel it has never seen, for example pooled list items.
+
+**One-time costs**, paid once and then reused:
+
+- the first bind of each widget (its binding list, and the UnityEvent listeners, because `UnityEvent.AddListener` allocates inside Unity);
+- the first time each `Bind.*` line runs (C# creates the cached `static` lambda);
+- the first ViewModel of a kind with 2+ bindings on the same property (later ones reuse its memory from a pool).
+
+**Your part:**
+
+- Use `static` lambdas in `Bind.To`. A lambda that captures variables allocates a closure on every bind.
+- Show numbers with `Bind.Text(label, source, "{0}")` instead of building strings. Strings you build in your ViewModel are your allocations.
+- TextMeshPro's `SetText` is allocation-free in players. Inside the Editor, TextMeshPro allocates a copy of the text for the Inspector.
+
+## ViewModels as ScriptableObjects
+
+A ViewModel can also be a `ScriptableObject` asset, so a HUD in one scene and the gameplay in another can share it without knowing each other. `Observable<T>` is not serialized; if you disable domain reload (*Enter Play Mode Options*), reset its values when play starts.
+
+## Running the tests
+
+Add the package to `testables` in your project's `Packages/manifest.json`:
+
+```json
+"testables": [ "com.modernwestern.observer-vm" ]
 ```
 
-This replaces the use of:
+Then run them from the Test Runner (PlayMode), or headless:
 
-```csharp
-observer.UpdateValue("PlayerHealthBar", value);
+```
+Unity -batchmode -nographics -projectPath <project> -runTests -testPlatform PlayMode -testResults results.xml
 ```
 
-## ✅ Summary
+## Migrating from 1.x
 
-- Use `[Bindable("Key")]` to mark fields to be auto-bound via `observer.AutoBind(this)`.
-- You can also use `BindingKey` for optimized and strongly-typed bindings.
-- Use `observer.Bind(key, component)` to manually bind a component using `BindingKey`.
-- Use `observer.UpdateValue(key, value)` to push data to the UI, using either `string` or `BindingKey`.
-- Use `observer.SubscribeViewChanges()` only if using bidirectional binding strategies.
-- Extend the system by creating new `IBindingStrategy` or `IBidirectionalBindingStrategy` implementations.
-- Call `Observer.Init(registry)` and register all relevant strategies before binding.
+2.0 replaces the string/`object` API with typed bindings.
+
+| 1.x | 2.0 |
+|---|---|
+| `Observer` ScriptableObject + `Observer.Init(registry)` | No global state: `widget.SetViewModel(viewModel)` |
+| `[Bindable("Key")]` + `observer.AutoBind(this)` | `[SerializeField, BindWidget]` + `OnBind` |
+| `observer.UpdateValue("Key", value)` | `viewModel.Property.Value = value` |
+| `BindingKey` | Not needed: the property itself is the key |
+| `IBindingStrategy` / `BindingRegistry` | Extension methods on `BindingScope` |
+| `IBidirectionalBindingStrategy` + `SubscribeViewChanges` | Bind an `Observable<T>` (two-way) or a `Command` |

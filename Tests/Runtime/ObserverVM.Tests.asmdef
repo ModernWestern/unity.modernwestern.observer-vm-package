@@ -1,0 +1,37 @@
+{
+    "name": "ObserverVM.Tests",
+    "rootNamespace": "ModernWestern.UI.ObserverVM.Tests",
+    "references": [
+        "ObserverVM",
+        "ObserverVM.UGUI",
+        "ObserverVM.TMP",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "3.0.0",
+            "define": "OBSERVERVM_TMP"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "2.0.0",
+            "define": "OBSERVERVM_TMP"
+        }
+    ],
+    "noEngineReferences": false
+}
