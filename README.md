@@ -95,16 +95,31 @@ player.TakeDamage(0.1f);    // the HUD updates, no allocations
 
 Bindings are removed automatically when the ViewModel changes or the widget is destroyed. Override `OnUnbind(viewModel)` for extra cleanup; if you override `OnDestroy`, call `base.OnDestroy()`.
 
-## Sample
+## Samples
 
-Package Manager → **ObserverVM** → **Samples** → **Basic HUD** → **Import**, then open `Basic HUD.unity` and press Play.
+Package Manager → **ObserverVM** → **Samples** → **Import**, open the scene and press Play. Both need TextMeshPro: if Unity asks to import *TMP Essential Resources*, accept. They work with the legacy Input Manager and with the Input System package.
 
-- `PlayerHUD.prefab`: the Widget, with every reference set through `[BindWidget]`.
-- `PlayerViewModel.cs`: health, score, volume, mute and the `Hit` / `Respawn` commands.
-- `PlayerSimulator.cs`: the gameplay side that creates the ViewModel and calls `SetViewModel`.
-- `SampleInputModule.cs`: adds the right UI input module for the legacy Input Manager or the Input System package.
+### Shop (start here)
 
-It needs TextMeshPro: if Unity asks to import *TMP Essential Resources*, accept.
+Where the binding pays off: one value drives many widgets, and nobody has to refresh the UI.
+
+- `Wallet` holds the gold. Every `ShopItem` derives "can I afford it?" from it (`Buy.CanExecute`).
+- `ShopItemWidget` is a single row prefab; `ShopDemo` creates one row per catalog entry (editable in the Inspector).
+- `ShopDemo` adds income every second by changing `wallet.Gold` only. The gold counter and every Buy button update by themselves.
+
+```csharp
+// ShopItem (ViewModel): affordability follows the wallet, whoever changes the gold.
+wallet.Gold.Subscribe(this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
+
+// ShopItemWidget (View): constants are plain assignments, only what changes is bound.
+itemName.text = item.Name;
+Bind.Text(owned, item.Owned, "x{0}");
+Bind.Click(buy, item.Buy);   // greys out while the item is not affordable
+```
+
+### Basic HUD
+
+A tour of the bindings on a player HUD: text, a filled health bar, a two-way slider and toggle, `Hit` / `Respawn` commands and custom `Bind.To` bindings.
 
 ## Bindings
 

@@ -17,6 +17,11 @@
   },
   "samples": [
     {
+      "displayName": "Shop",
+      "description": "Start here. A shop where every Buy button enables and disables itself with your gold: one Wallet ViewModel shared by many widgets, derived state (Command.CanExecute), and rows generated from data with a single prefab. Requires TextMeshPro (import TMP Essential Resources when prompted).",
+      "path": "Samples~/Shop"
+    },
+    {
       "displayName": "Basic HUD",
       "description": "A ready-to-play scene: a player HUD (Widget prefab) bound to a PlayerViewModel with text, a health bar, a two-way volume slider and mute toggle, and Hit/Respawn commands. Works with the legacy Input Manager and the Input System package. Requires TextMeshPro (import TMP Essential Resources when prompted).",
       "path": "Samples~/Basic"
