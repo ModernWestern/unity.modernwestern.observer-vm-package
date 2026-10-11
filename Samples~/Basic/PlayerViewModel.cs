@@ -5,11 +5,15 @@ namespace ModernWestern.UI.ObserverVM.Samples
     // The ViewModel knows nothing about the UI: it only exposes observable properties and commands.
     public sealed class PlayerViewModel
     {
+        private const float HitDamage = 0.25f;
+
         private readonly Observable<float> _health = new(1f);
 
         public PlayerViewModel(string nickname)
         {
             Nickname = new Observable<string>(nickname);
+
+            Hit = new Command(OnHit);
 
             Respawn = new Command(OnRespawn, canExecute: false);
         }
@@ -26,6 +30,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         public Observable<bool> Muted { get; } = new();
 
+        public Command Hit { get; }
+
         public Command Respawn { get; }
 
         public bool IsDead => _health.Value <= 0f;
@@ -34,7 +40,14 @@ namespace ModernWestern.UI.ObserverVM.Samples
         {
             _health.Value = Mathf.Max(0f, _health.Value - amount);
 
+            Hit.CanExecute.Value = !IsDead;
+
             Respawn.CanExecute.Value = IsDead;
+        }
+
+        private void OnHit()
+        {
+            TakeDamage(HitDamage);
         }
 
         private void OnRespawn()
@@ -42,6 +55,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
             _health.Value = 1f;
 
             Score.Value = 0;
+
+            Hit.CanExecute.Value = true;
 
             Respawn.CanExecute.Value = false;
         }

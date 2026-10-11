@@ -13,17 +13,23 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         [SerializeField, BindWidget] private Image healthBar;
 
+        [SerializeField, BindWidget] private TMP_Text healthLabel;
+
         [SerializeField, BindWidget] private Slider volume;
 
+        [SerializeField, BindWidget] private TMP_Text volumeLabel;
+
         [SerializeField, BindWidget] private Toggle muted;
+
+        [SerializeField, BindWidget] private Button hit;
 
         [SerializeField, BindWidget] private Button respawn;
 
         [SerializeField, BindWidget(Optional = true)] private GameObject deathScreen;
 
-        [SerializeField] private Color healthyColor = Color.green;
+        [SerializeField] private Color healthyColor = new(0.3f, 0.85f, 0.45f);
 
-        [SerializeField] private Color criticalColor = Color.red;
+        [SerializeField] private Color criticalColor = new(0.95f, 0.3f, 0.3f);
 
         protected override void OnBind(PlayerViewModel viewModel)
         {
@@ -37,6 +43,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
             Bind.IsOn(muted, viewModel.Muted);
 
+            Bind.Click(hit, viewModel.Hit);
+
             Bind.Click(respawn, viewModel.Respawn);
 
             if (deathScreen != null)
@@ -44,13 +52,19 @@ namespace ModernWestern.UI.ObserverVM.Samples
                 Bind.Active(deathScreen, viewModel.Respawn.CanExecute);
             }
 
-            // Custom binding: a static lambda plus the state it needs, so nothing is captured or allocated.
+            // Custom bindings: a static lambda plus the state it needs, so nothing is captured or allocated.
             Bind.To(viewModel.Health, this, static (self, health) => self.OnHealthChanged(health));
+
+            Bind.To(viewModel.Volume, volumeLabel, static (label, value) => label.SetText("{0:0}%", value * 100f));
+
+            Bind.To(viewModel.Muted, volume, static (slider, isMuted) => slider.interactable = !isMuted);
         }
 
         private void OnHealthChanged(float health)
         {
-            healthBar.color = health < 0.25f ? criticalColor : healthyColor;
+            healthBar.color = health <= 0.25f ? criticalColor : healthyColor;
+
+            healthLabel.SetText("{0:0}%", health * 100f);
         }
     }
 }

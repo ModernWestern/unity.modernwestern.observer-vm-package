@@ -9,7 +9,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         [SerializeField] private string nickname = "Player";
 
-        [SerializeField] private float damagePerSecond = 0.1f;
+        [SerializeField, Tooltip("Damage taken every second while alive. 0 = only the Hit button hurts.")]
+        private float damagePerSecond = 0.02f;
 
         private PlayerViewModel _player;
 
@@ -29,7 +30,10 @@ namespace ModernWestern.UI.ObserverVM.Samples
                 return;
             }
 
-            _player.TakeDamage(damagePerSecond * Time.deltaTime);
+            if (damagePerSecond > 0f)
+            {
+                _player.TakeDamage(damagePerSecond * Time.deltaTime);
+            }
 
             _scoreTimer += Time.deltaTime;
 

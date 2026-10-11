@@ -95,7 +95,16 @@ player.TakeDamage(0.1f);    // the HUD updates, no allocations
 
 Bindings are removed automatically when the ViewModel changes or the widget is destroyed. Override `OnUnbind(viewModel)` for extra cleanup; if you override `OnDestroy`, call `base.OnDestroy()`.
 
-The **Basic HUD** sample (Package Manager → ObserverVM → Samples) contains the complete example.
+## Sample
+
+Package Manager → **ObserverVM** → **Samples** → **Basic HUD** → **Import**, then open `Basic HUD.unity` and press Play.
+
+- `PlayerHUD.prefab`: the Widget, with every reference set through `[BindWidget]`.
+- `PlayerViewModel.cs`: health, score, volume, mute and the `Hit` / `Respawn` commands.
+- `PlayerSimulator.cs`: the gameplay side that creates the ViewModel and calls `SetViewModel`.
+- `SampleInputModule.cs`: adds the right UI input module for the legacy Input Manager or the Input System package.
+
+It needs TextMeshPro: if Unity asks to import *TMP Essential Resources*, accept.
 
 ## Bindings
 

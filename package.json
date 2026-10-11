@@ -18,7 +18,7 @@
   "samples": [
     {
       "displayName": "Basic HUD",
-      "description": "A player HUD (Widget) bound to a PlayerViewModel: text, fill, two-way slider and toggle, and a Command button. Requires TextMeshPro.",
+      "description": "A ready-to-play scene: a player HUD (Widget prefab) bound to a PlayerViewModel with text, a health bar, a two-way volume slider and mute toggle, and Hit/Respawn commands. Works with the legacy Input Manager and the Input System package. Requires TextMeshPro (import TMP Essential Resources when prompted).",
       "path": "Samples~/Basic"
     }
   ],
