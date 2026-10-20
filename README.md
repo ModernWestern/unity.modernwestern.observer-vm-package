@@ -100,7 +100,7 @@ Bindings are removed automatically when the ViewModel changes or the widget is d
 
 ## Samples
 
-Package Manager → **ObserverVM** → **Samples** → **Import**, open the scene and press Play. Both need TextMeshPro: if Unity asks to import *TMP Essential Resources*, accept. They work with the legacy Input Manager and with the Input System package.
+Package Manager → **ObserverVM** → **Samples** → **Import**, open the scene and press Play. All of them need TextMeshPro: if Unity asks to import *TMP Essential Resources*, accept. They work with the legacy Input Manager and with the Input System package.
 
 ### Shop (start here)
 
@@ -123,6 +123,34 @@ itemName.text = item.Name;
 Bind.Text(owned, item.Owned, "x{0}");
 Bind.Click(buy, item.Buy);   // greys out while the item is not affordable
 ```
+
+### World UI
+
+UI over a 3D world, in one scene. Move the blue cube with WASD or the arrow keys, attack with Space and use objects with E (or click the card's button).
+
+- **Stats over each character.** Every cube gets a nameplate that follows it on screen: name, health and mana bars with "75 / 100", and a floating damage number on every hit. The player's stats are also in the HUD: the same `CharacterWidget` with a bigger layout, bound to the same `CharacterViewModel` (`Bind.Child`).
+- **Cards when you come close.** Chests, a shrine and a signpost show a card with a title, a text and a button. The card follows `IsInRange` and the button greys out by itself when the object cannot be used (an empty chest, a recharging shrine). `InteractionWidget` has no code: every binding is a View Binding.
+- **A HUD that reacts to the world.** Opening a chest adds gold and counts the chest, the shrine refills your bars, defeating an enemy counts it, and each event shows a message.
+
+The world never touches the UI: characters and objects only change their ViewModels (`TakeDamage`, `IsInRange`, `Gold`), and `WorldDemo` is the only script that knows both sides. It spawns one nameplate per character and one card per object and binds each to its ViewModel.
+
+Following a character is not a binding: `WorldAnchor` projects the world position to the screen in `LateUpdate` (Screen Space - Overlay or Camera), without allocating.
+
+```csharp
+// WorldDemo: spawn a nameplate over an enemy and bind it.
+var nameplate = Instantiate(nameplatePrefab, worldLayer);
+nameplate.GetComponent<WorldAnchor>().Follow(enemy.transform, new Vector3(0f, 1.3f, 0f));
+nameplate.SetViewModel(enemy.Stats);
+
+// Chest (world side): only the ViewModels change; the card and the HUD follow.
+Game.Gold.Value += gold;
+Prompt.Interact.CanExecute.Value = false;
+
+// CharacterWidget (View): what needs a calculation stays in code, the rest is in the Inspector.
+Bind.To(stats.Health, this, static (self, health) => self.healthLabel.SetText("{0} / {1}", health, self.ViewModel.MaxHealth));
+```
+
+The cubes use a small shader with its own fixed light (`Art/Flat Lit.shader`), so the scene looks the same in the Built-in pipeline and in URP, with no pink materials.
 
 ### Basic HUD
 

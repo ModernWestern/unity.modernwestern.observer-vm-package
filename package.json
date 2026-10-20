@@ -22,6 +22,11 @@
       "path": "Samples~/Shop"
     },
     {
+      "displayName": "World UI",
+      "description": "UI over a 3D world: nameplates that follow the characters on screen (health, mana, floating damage numbers), cards that pop up over objects when you come close, and a HUD that reacts to what you do in the world (chests, a healing shrine, enemies). Uses View Bindings, code bindings and child widgets together. Works with the Built-in pipeline and URP, and with the legacy Input Manager and the Input System package. Requires TextMeshPro (import TMP Essential Resources when prompted).",
+      "path": "Samples~/WorldUI"
+    },
+    {
       "displayName": "Basic HUD",
       "description": "A ready-to-play scene: a player HUD (Widget prefab) bound to a PlayerViewModel with text, a health bar, a two-way volume slider and mute toggle, and Hit/Respawn commands. Works with the legacy Input Manager and the Input System package. Requires TextMeshPro (import TMP Essential Resources when prompted).",
       "path": "Samples~/Basic"
