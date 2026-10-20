@@ -16,7 +16,9 @@ Zero-allocation, strongly typed MVVM bindings for Unity UI (UGUI + TextMeshPro),
 | ViewModel with `FieldNotify` properties | class with `Observable<T>` properties |
 | View bindings | `OnBind(viewModel)` + `Bind.*` |
 | `SetViewModel` | `SetViewModel` |
-| Button `OnClicked` → ViewModel function | `Command` + `Bind.Click` |
+| Button `OnClicked` → ViewModel function | `Command` / `Command<T>` + `Bind.Click` |
+| `ListView` with entry widgets | `ObservableList<T>` + `Bind.List` |
+| Nested widget with its own ViewModel | `Bind.Child` |
 
 ## Installation
 
@@ -104,13 +106,17 @@ Package Manager → **ObserverVM** → **Samples** → **Import**, open the scen
 
 Where the binding pays off: one value drives many widgets, and nobody has to refresh the UI.
 
-- `Wallet` holds the gold. Every `ShopItem` derives "can I afford it?" from it (`Buy.CanExecute`).
-- `ShopItemWidget` is a single row prefab; `ShopDemo` creates one row per catalog entry (editable in the Inspector).
-- `ShopDemo` adds income every second by changing `wallet.Gold` only. The gold counter and every Buy button update by themselves.
+- `Wallet` holds the gold. Every `ShopItem` derives "can I afford it?" from it (`Buy.CanExecute`) with `Watch`, which stops when the item is disposed.
+- `ShopViewModel` has the wallet and an `ObservableList<ShopItem>`; `ShopWidget` shows it with `Bind.List` (one row per item from a single row prefab) and hands the wallet to its own widget with `Bind.Child`.
+- `ShopDemo` builds the shop from a catalog (editable in the Inspector) and adds income every second by changing `Wallet.Gold` only. The gold counter and every Buy button update by themselves.
 
 ```csharp
 // ShopItem (ViewModel): affordability follows the wallet, whoever changes the gold.
-wallet.Gold.Subscribe(this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
+Watch(wallet.Gold, this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
+
+// ShopWidget (View): a nested widget and a list, like UMG's child widgets and ListView.
+Bind.Child(wallet, shop.Wallet);
+Bind.List(rowTemplate, shop.Items);
 
 // ShopItemWidget (View): constants are plain assignments, only what changes is bound.
 itemName.text = item.Name;
@@ -140,9 +146,45 @@ Input widgets are **two-way** when given an `Observable<T>` and **one-way** when
 | `Bind.Value` | `Dropdown`, `TMP_Dropdown` | `int` (two-way) |
 | `Bind.IsOn` | `Toggle` | `bool` (two-way) |
 | `Bind.Text` | `InputField`, `TMP_InputField` | `string` (two-way) |
-| `Bind.Click` | `Button` | `Command` |
+| `Bind.Click` | `Button` | `Command`, or `Command<T>` + a parameter |
+| `Bind.List` | a row template (`Widget<TItem>`) | `ObservableList<TItem>` |
+| `Bind.Child` | a nested `Widget<TChild>` | a `TChild`, or an `IReadOnlyObservable<TChild>` (e.g. the selected item) |
 | `Bind.To` | anything | any `T`, with a `static` lambda |
 | `Bind.Event` | any `UnityEvent<T>` / `UnityEvent` | `Observable<T>` / `Command` (View → ViewModel) |
+
+### Lists
+
+`ObservableList<T>` notifies adds, removes, replacements, moves and clears. `Bind.List(template, items)` hides the template and keeps one copy per item next to it (put the template alone under its container, e.g. a `VerticalLayoutGroup`), named `Row 1`, `Row 2`... for a template called `Row Template`. Rows are pooled: removing an item hides its row and keeps it for the next one, and re-binding to another list reuses them.
+
+```csharp
+public ObservableList<ShopItem> Items { get; } = new();
+
+// In the widget:
+Bind.List(rowTemplate, viewModel.Items);   // rowTemplate is a ShopItemWidget : Widget<ShopItem>
+```
+
+### Child widgets
+
+`Bind.Child(childWidget, viewModel.Part)` gives a nested widget its ViewModel while the parent is bound and clears it when the parent unbinds. Pass an `IReadOnlyObservable<TChild>` to follow a changing ViewModel, such as a details panel showing the selected item.
+
+### Derived state and ViewModel lifetime
+
+A ViewModel that reacts to another one (derived state) should stop listening when it is thrown away. Derive from `ViewModel` and use `Watch`: every subscription is released by `Dispose()`.
+
+```csharp
+public sealed class ShopItem : ViewModel
+{
+    public ShopItem(Wallet wallet, int price)
+    {
+        Price = price;
+        Buy = new Command(OnBuy);
+        Watch(wallet.Gold, this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
+    }
+    // ...
+}
+```
+
+Override `OnDispose()` to dispose child ViewModels (for example the items of a list).
 
 ### Your own bindings
 
@@ -199,13 +241,15 @@ A required `[BindWidget]` left empty is reported like a missing BindWidget in Un
 - changing a ViewModel value, with any number of bindings;
 - user input flowing back to the ViewModel (sliders, toggles, dropdowns, buttons);
 - unbinding (`SetViewModel(null)`, destroying the widget);
-- re-binding a widget to a ViewModel it has never seen, for example pooled list items.
+- re-binding a widget to a ViewModel it has never seen, for example pooled list items;
+- adding, removing, replacing and moving list items bound with `Bind.List`, and re-binding a list, once enough rows exist in its pool.
 
 **One-time costs**, paid once and then reused:
 
 - the first bind of each widget (its binding list, and the UnityEvent listeners, because `UnityEvent.AddListener` allocates inside Unity);
 - the first time each `Bind.*` line runs (C# creates the cached `static` lambda);
-- the first ViewModel of a kind with 2+ bindings on the same property (later ones reuse its memory from a pool).
+- the first ViewModel of a kind with 2+ bindings on the same property (later ones reuse its memory from a pool);
+- each new row a `Bind.List` needs (it is instantiated once and pooled afterwards).
 
 **Your part:**
 

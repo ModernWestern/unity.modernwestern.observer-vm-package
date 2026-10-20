@@ -143,6 +143,87 @@ namespace ModernWestern.UI.ObserverVM.Tests
             Assert.AreEqual(0, health.SubscriberCount);
         }
 
+        [Test]
+        public void ListChanges_AndListRebinds_DoNotAllocate_OnceRowsArePooled()
+        {
+            var scope = new BindingScope();
+
+            var container = CreateObject("Rows").transform;
+
+            var template = Create<TestRowWidget>();
+
+            template.transform.SetParent(container, false);
+
+            template.Label = Create<UnityEngine.UI.Text>();
+
+            template.Label.transform.SetParent(template.transform, false);
+
+            var items = new ObservableList<TestItem>(8);
+
+            var other = new ObservableList<TestItem>(8);
+
+            var a = new TestItem("a");
+
+            var b = new TestItem("b");
+
+            var c = new TestItem("c");
+
+            other.Add(new TestItem("x"));
+
+            other.Add(new TestItem("y"));
+
+            // Warm up: three rows get created, bound and pooled; the second list is bound once.
+            scope.List(template, items);
+
+            items.Add(a);
+
+            items.Add(b);
+
+            items.Add(c);
+
+            items.Move(0, 2);
+
+            items.Clear();
+
+            scope.Clear();
+
+            scope.List(template, other);
+
+            scope.Clear();
+
+            scope.List(template, items);
+
+            Assert.That(() =>
+            {
+                items.Add(a);
+
+                items.Add(b);
+
+                items.Insert(0, c);
+
+                items.Move(0, 2);
+
+                items.RemoveAt(1);
+
+                items[0] = b;
+
+                items.Clear();
+            }, Is.Not.AllocatingGCMemory());
+
+            Assert.That(() =>
+            {
+                scope.Clear();
+
+                scope.List(template, other);
+
+                scope.Clear();
+
+                scope.List(template, items);
+            }, Is.Not.AllocatingGCMemory());
+
+            scope.Dispose();
+        }
+
 #if OBSERVERVM_TMP
         [Test]
         public void TmpNumbers_DoNotAllocate()

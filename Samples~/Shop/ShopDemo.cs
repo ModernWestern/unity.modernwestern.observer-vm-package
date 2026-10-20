@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace ModernWestern.UI.ObserverVM.Samples.Shop
 {
-    // The "game": builds the ViewModels from data, hands them to the widgets and earns gold over time.
-    // It never touches the UI after that: changing the wallet is enough for every widget to update.
+    // The "game": builds the shop ViewModel from data, hands it to the shop widget and earns gold over time.
+    // It never touches the UI after that: changing the ViewModel is enough for every widget to update.
     public sealed class ShopDemo : MonoBehaviour
     {
         [Serializable]
@@ -15,10 +15,7 @@ namespace ModernWestern.UI.ObserverVM.Samples.Shop
             public int price;
         }
 
-        [SerializeField] private WalletWidget wallet;
-
-        [SerializeField, Tooltip("Row used as a template: one copy is created per catalog entry.")]
-        private ShopItemWidget rowTemplate;
+        [SerializeField] private ShopWidget shop;
 
         [SerializeField] private int startingGold = 100;
 
@@ -32,28 +29,20 @@ namespace ModernWestern.UI.ObserverVM.Samples.Shop
             new() { name = "Dragon Egg", price = 500 }
         };
 
-        private Wallet _wallet;
+        private ShopViewModel _shop;
 
         private float _incomeTimer;
 
         private void Awake()
         {
-            _wallet = new Wallet(startingGold);
-
-            wallet.SetViewModel(_wallet);
+            _shop = new ShopViewModel(startingGold);
 
             foreach (var entry in catalog)
             {
-                var row = Instantiate(rowTemplate, rowTemplate.transform.parent);
-
-                row.name = entry.name;
-
-                row.gameObject.SetActive(true);
-
-                row.SetViewModel(new ShopItem(_wallet, entry.name, entry.price));
+                _shop.AddItem(entry.name, entry.price);
             }
 
-            rowTemplate.gameObject.SetActive(false);
+            shop.SetViewModel(_shop);
         }
 
         private void Update()
@@ -67,7 +56,12 @@ namespace ModernWestern.UI.ObserverVM.Samples.Shop
 
             _incomeTimer -= 1f;
 
-            _wallet.Gold.Value += incomePerSecond;
+            _shop.Wallet.Gold.Value += incomePerSecond;
+        }
+
+        private void OnDestroy()
+        {
+            _shop?.Dispose();
         }
     }
 }

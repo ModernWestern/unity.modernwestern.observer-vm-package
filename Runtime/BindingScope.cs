@@ -14,8 +14,8 @@ namespace ModernWestern.UI.ObserverVM
 
         private int _subscriptionCount;
 
-        // [0, _linkCursor) are attached in the current bind; [_linkCursor, _linkCount) are detached but still listening.
-        private EventLink[] _links = Array.Empty<EventLink>();
+        // [0, _linkCursor) are attached in the current bind; [_linkCursor, _linkCount) are detached but kept for the next bind.
+        private ScopeLink[] _links = Array.Empty<ScopeLink>();
 
         private int _linkCount;
 
@@ -69,7 +69,50 @@ namespace ModernWestern.UI.ObserverVM
         }
 
         /// <summary>
-        /// Unbinds everything. Keeps the memory and UnityEvent listeners for the next bind.
+        /// View → ViewModel: executes <paramref name="command"/> with <paramref name="parameter"/> every time <paramref name="viewEvent"/> is raised.
+        /// </summary>
+        public void Event<T>(UnityEvent viewEvent, Command<T> command, T parameter)
+        {
+            var link = Claim_Internal<CommandLink<T>>(viewEvent) ?? Push_Internal(new CommandLink<T>());
+
+            link.Attach(viewEvent, command, parameter);
+        }
+
+        /// <summary>
+        /// Gives a child widget its ViewModel for as long as this scope is bound, like a nested UUserWidget.
+        /// <c>Bind.Child(walletWidget, viewModel.Wallet);</c>
+        /// </summary>
+        public void Child<TViewModel>(Widget<TViewModel> child, TViewModel viewModel) where TViewModel : class
+        {
+            var link = Claim_Internal<ChildLink<TViewModel>>(child) ?? Push_Internal(new ChildLink<TViewModel>());
+
+            link.Attach(child, viewModel);
+        }
+
+        /// <summary>
+        /// Gives a child widget the ViewModel held by <paramref name="viewModel"/>, following it when it changes (e.g. the selected item).
+        /// </summary>
+        public void Child<TViewModel>(Widget<TViewModel> child, IReadOnlyObservable<TViewModel> viewModel) where TViewModel : class
+        {
+            var link = Claim_Internal<ChildLink<TViewModel>>(child) ?? Push_Internal(new ChildLink<TViewModel>());
+
+            link.Attach(child, viewModel);
+        }
+
+        /// <summary>
+        /// One row per item, like UMG's ListView: <paramref name="template"/> is hidden and copied for each item of <paramref name="items"/>,
+        /// in its same parent. Rows follow every change of the list and are pooled, so adding, removing and re-binding do not allocate
+        /// once enough rows exist. Keep the template alone in its container (e.g. under a LayoutGroup).
+        /// </summary>
+        public void List<TItem, TWidget>(TWidget template, IReadOnlyObservableList<TItem> items) where TItem : class where TWidget : Widget<TItem>
+        {
+            var link = Claim_Internal<ListLink<TItem, TWidget>>(template) ?? Push_Internal(new ListLink<TItem, TWidget>());
+
+            link.Attach(template, items);
+        }
+
+        /// <summary>
+        /// Unbinds everything. Keeps the memory, UnityEvent listeners and pooled rows for the next bind.
         /// </summary>
         public void Clear()
         {
@@ -91,7 +134,7 @@ namespace ModernWestern.UI.ObserverVM
         }
 
         /// <summary>
-        /// Unbinds everything and removes the UnityEvent listeners.
+        /// Unbinds everything, removes the UnityEvent listeners and destroys pooled rows.
         /// </summary>
         public void Dispose()
         {
@@ -110,11 +153,11 @@ namespace ModernWestern.UI.ObserverVM
 #region Internal
 
         // Bindings are usually declared in the same order on every bind, so the link we need is normally the one at the cursor.
-        private TLink Claim_Internal<TLink>(UnityEventBase source) where TLink : EventLink
+        private TLink Claim_Internal<TLink>(object key) where TLink : ScopeLink
         {
             for (var i = _linkCursor; i < _linkCount; i++)
             {
-                if (_links[i] is not TLink link || !ReferenceEquals(link.Source, source))
+                if (_links[i] is not TLink link || !ReferenceEquals(link.Key, key))
                 {
                     continue;
                 }
@@ -129,7 +172,7 @@ namespace ModernWestern.UI.ObserverVM
             return null;
         }
 
-        private TLink Push_Internal<TLink>(TLink link) where TLink : EventLink
+        private TLink Push_Internal<TLink>(TLink link) where TLink : ScopeLink
         {
             if (_linkCount == _links.Length)
             {

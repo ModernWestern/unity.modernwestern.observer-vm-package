@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 65382471}
   - component: {fileID: 65382473}
   - component: {fileID: 65382472}
+  - component: {fileID: 65382474}
   m_Layer: 5
   m_Name: Shop
   m_TagString: Untagged
@@ -201,6 +202,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 65382470}
   m_CullTransparentMesh: 1
+--- !u!114 &65382474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 65382470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b9509a44f0ef854095f46c4a87b27ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wallet: {fileID: 1256528372}
+  rowTemplate: {fileID: 680014342}
 --- !u!1 &122978841
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,8 +957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7533ac3df93ca8e408e939242134ab08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wallet: {fileID: 1256528372}
-  rowTemplate: {fileID: 680014342}
+  shop: {fileID: 65382474}
   startingGold: 100
   incomePerSecond: 10
   catalog:

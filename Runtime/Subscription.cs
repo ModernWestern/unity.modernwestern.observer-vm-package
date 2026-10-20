@@ -32,6 +32,8 @@ namespace ModernWestern.UI.ObserverVM
 
         public bool IsActive => _source != null && _source.IsSubscribed(_index, _version);
 
+        internal int Index => _index;
+
         public void Dispose()
         {
             _source?.Unsubscribe(_index, _version);

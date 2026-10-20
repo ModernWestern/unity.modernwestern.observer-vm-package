@@ -130,6 +130,16 @@ namespace ModernWestern.UI.ObserverVM
             bind.Event(button.onClick, command);
         }
 
+        /// <summary>
+        /// Executes <paramref name="command"/> with <paramref name="parameter"/> on click and keeps <c>button.interactable</c> in sync with its CanExecute.
+        /// </summary>
+        public static void Click<T>(this BindingScope bind, Button button, Command<T> command, T parameter)
+        {
+            bind.Interactable(button, command.CanExecute);
+
+            bind.Event(button.onClick, command, parameter);
+        }
+
 #endregion
     }
 }

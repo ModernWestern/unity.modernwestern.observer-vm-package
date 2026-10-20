@@ -1,7 +1,7 @@
 namespace ModernWestern.UI.ObserverVM.Samples.Shop
 {
     // ViewModel of one item. It knows the wallet, never the UI.
-    public sealed class ShopItem
+    public sealed class ShopItem : ViewModel
     {
         private readonly Wallet _wallet;
 
@@ -16,7 +16,8 @@ namespace ModernWestern.UI.ObserverVM.Samples.Shop
             Buy = new Command(OnBuy);
 
             // Derived state: "can I afford it?" follows the wallet by itself, whoever changes the gold.
-            wallet.Gold.Subscribe(this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
+            // Watch stops when the item is disposed, so a removed item does not keep listening to the wallet.
+            Watch(wallet.Gold, this, static (item, gold) => item.Buy.CanExecute.Value = gold >= item.Price);
         }
 
         public string Name { get; }
@@ -26,6 +27,8 @@ namespace ModernWestern.UI.ObserverVM.Samples.Shop
         public Observable<int> Owned { get; } = new();
 
         public Command Buy { get; }
+
+        public override string ToString() => Name;
 
         private void OnBuy()
         {

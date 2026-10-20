@@ -18,6 +18,8 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
             Observable,
             ReadOnlyObservable,
             Command,
+            ParameterCommand,
+            List,
             Plain
         }
 
@@ -80,6 +82,12 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
                     case Kind.Command:
                         DrawCommand_Internal(member.Name, value as Command);
                         break;
+                    case Kind.ParameterCommand:
+                        DrawParameterCommand_Internal(member.Name, value);
+                        break;
+                    case Kind.List:
+                        DrawList_Internal(member.Name, value as System.Collections.IEnumerable);
+                        break;
                     default:
                         EditorGUILayout.LabelField(member.Name, value?.ToString() ?? "null");
                         break;
@@ -88,6 +96,44 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
         }
 
 #region Internal
+
+        private const int MaxListItems = 20;
+
+        private static void DrawList_Internal(string name, System.Collections.IEnumerable list)
+        {
+            if (list == null)
+            {
+                EditorGUILayout.LabelField(name, "null");
+
+                return;
+            }
+
+            var items = list.Cast<object>().ToArray();
+
+            var subscribers = list.GetType().GetProperty("SubscriberCount", Flags)?.GetValue(list);
+
+            EditorGUILayout.LabelField(new GUIContent(name, $"ObservableList, {subscribers} binding(s)."), new GUIContent($"{items.Length} item(s)"));
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                for (var i = 0; i < items.Length && i < MaxListItems; i++)
+                {
+                    EditorGUILayout.LabelField($"[{i}]", items[i]?.ToString() ?? "null");
+                }
+
+                if (items.Length > MaxListItems)
+                {
+                    EditorGUILayout.LabelField($"...and {items.Length - MaxListItems} more", ObserverVMStyles.MutedLabel);
+                }
+            }
+        }
+
+        private static void DrawParameterCommand_Internal(string name, object command)
+        {
+            var canExecute = command?.GetType().GetProperty("CanExecute", Flags)?.GetValue(command) is Observable<bool> { Value: true };
+
+            EditorGUILayout.LabelField(new GUIContent(name, "Command with a parameter: run it from the widget that passes the parameter."), new GUIContent(canExecute ? "Can execute" : "Cannot execute now"));
+        }
 
         private static void DrawObservable_Internal(Member member, object observable)
         {
@@ -210,6 +256,16 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
             if (typeof(Command).IsAssignableFrom(type))
             {
                 return Kind.Command;
+            }
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Command<>))
+            {
+                return Kind.ParameterCommand;
+            }
+
+            if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(ObservableList<>) || type.GetGenericTypeDefinition() == typeof(IReadOnlyObservableList<>)))
+            {
+                return Kind.List;
             }
 
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Observable<>))
