@@ -1,6 +1,6 @@
 {
     "name": "ObserverVM.Editor",
-    "rootNamespace": "ModernWestern.UI.ObserverVM.Drawers",
+    "rootNamespace": "ModernWestern.UI.ObserverVM.EditorTools",
     "references": [
         "ObserverVM"
     ],
@@ -11,7 +11,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

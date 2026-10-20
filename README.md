@@ -11,7 +11,8 @@ Zero-allocation, strongly typed MVVM bindings for Unity UI (UGUI + TextMeshPro),
 | Unreal (UMG) | ObserverVM |
 |---|---|
 | `UUserWidget` | `Widget<TViewModel>` |
-| `meta=(BindWidget)` / `BindWidgetOptional` | `[BindWidget]` / `[BindWidget(Optional = true)]` |
+| `meta=(BindWidget)` / `BindWidgetOptional` | `[BindWidget]` / `[BindWidget(Optional = true)]`, with **Auto-assign by name** |
+| Widget Blueprint does not compile with a missing BindWidget | Play warns and the build fails (configurable) |
 | ViewModel with `FieldNotify` properties | class with `Observable<T>` properties |
 | View bindings | `OnBind(viewModel)` + `Bind.*` |
 | `SetViewModel` | `SetViewModel` |
@@ -160,9 +161,40 @@ public static class MyBindings
 Bind.Width(panel, viewModel.PanelWidth);
 ```
 
+## Editor tools
+
+### Widget inspector
+
+Every `Widget<TViewModel>` gets its own inspector:
+
+- **Status**: which ViewModel it expects and whether every required widget is bound.
+- **Widgets**: each `[BindWidget]` field with a mark (accent = bound, red = required and empty, grey = optional and empty).
+- **Auto-assign by name**: fills the empty fields with the child named like the field, as Unreal's BindWidget does. `healthBar` finds `Health Bar`, `HealthBar`, `health_bar`, or the name plus a widget word (`Health Bar Image`, `Respawn Button`). It never overwrites a field that is set, leaves a field empty when two children match, does not look inside nested widgets, and supports Undo.
+- **ViewModel** (Play mode): the live values of the bound ViewModel. Edit an `Observable<T>` to push a value to the widgets, run a `Command` with its Execute button, and see how many bindings each property has.
+
+### Validation
+
+A required `[BindWidget]` left empty is reported like a missing BindWidget in Unreal. **Project Settings → ObserverVM** chooses how strict it is:
+
+| When | Default | Options |
+|---|---|---|
+| Pressing Play | Warn in the Console (click the message to select the object) | Ignore, Warn, Stop |
+| Building | Stop: the build fails with the list of empty fields | Ignore, Warn, Stop |
+| Check prefabs on build | On: every prefab under `Assets` is checked too | On, Off |
+
+**Window → ObserverVM → Validation** lists every empty required field in the open scenes and/or prefabs, with **Select** and **Auto-assign by name** buttons.
+
+### Debugger
+
+**Window → ObserverVM → Debugger** (Play mode) lists every live widget with its ViewModel and binding count. Select a widget there or in the Hierarchy to see and edit its ViewModel.
+
+### New scripts
+
+**Assets → Create → ObserverVM → Widget + ViewModel**: type a name (`Inventory`) and get `InventoryViewModel.cs` and `InventoryWidget.cs`, ready to fill in.
+
 ## Zero allocations
 
-**Allocation-free** (verified by `Tests/Runtime/ZeroGcTests.cs` with Unity's `Is.Not.AllocatingGCMemory()`, in the Editor and in a Windows player):
+**Allocation-free** (verified by `Tests/Runtime/ZeroGcTests.cs` with Unity's `Is.Not.AllocatingGCMemory()`, in the Editor and in Windows players built with Mono and with IL2CPP):
 
 - changing a ViewModel value, with any number of bindings;
 - user input flowing back to the ViewModel (sliders, toggles, dropdowns, buttons);
