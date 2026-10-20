@@ -9,6 +9,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         private readonly Observable<float> _health = new(1f);
 
+        private readonly Observable<bool> _isDead = new(false);
+
         public PlayerViewModel(string nickname)
         {
             Nickname = new Observable<string>(nickname);
@@ -23,6 +25,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
         // Read-only: widgets can display it but never write it.
         public IReadOnlyObservable<float> Health => _health;
 
+        public IReadOnlyObservable<bool> IsDead => _isDead;
+
         public Observable<int> Score { get; } = new();
 
         // Writable: a Slider bound to it is two-way.
@@ -34,15 +38,15 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         public Command Respawn { get; }
 
-        public bool IsDead => _health.Value <= 0f;
-
         public void TakeDamage(float amount)
         {
             _health.Value = Mathf.Max(0f, _health.Value - amount);
 
-            Hit.CanExecute.Value = !IsDead;
+            _isDead.Value = _health.Value <= 0f;
 
-            Respawn.CanExecute.Value = IsDead;
+            Hit.CanExecute.Value = !_isDead.Value;
+
+            Respawn.CanExecute.Value = _isDead.Value;
         }
 
         private void OnHit()
@@ -53,6 +57,8 @@ namespace ModernWestern.UI.ObserverVM.Samples
         private void OnRespawn()
         {
             _health.Value = 1f;
+
+            _isDead.Value = false;
 
             Score.Value = 0;
 

@@ -14,7 +14,7 @@ Zero-allocation, strongly typed MVVM bindings for Unity UI (UGUI + TextMeshPro),
 | `meta=(BindWidget)` / `BindWidgetOptional` | `[BindWidget]` / `[BindWidget(Optional = true)]`, with **Auto-assign by name** |
 | Widget Blueprint does not compile with a missing BindWidget | Play warns and the build fails (configurable) |
 | ViewModel with `FieldNotify` properties | class with `Observable<T>` properties |
-| View bindings | `OnBind(viewModel)` + `Bind.*` |
+| View Bindings panel | **View Bindings** in the widget inspector (no code), or `OnBind(viewModel)` + `Bind.*` |
 | `SetViewModel` | `SetViewModel` |
 | Button `OnClicked` → ViewModel function | `Command` / `Command<T>` + `Bind.Click` |
 | `ListView` with entry widgets | `ObservableList<T>` + `Bind.List` |
@@ -126,7 +126,7 @@ Bind.Click(buy, item.Buy);   // greys out while the item is not affordable
 
 ### Basic HUD
 
-A tour of the bindings on a player HUD: text, a filled health bar, a two-way slider and toggle, `Hit` / `Respawn` commands and custom `Bind.To` bindings.
+A player HUD bound almost entirely from the Inspector (**View Bindings**): nickname, score, health bar, two-way volume slider and mute toggle, "mute disables the slider" (inverted), `Hit` / `Respawn` commands and the death screen. `PlayerHUD.OnBind` keeps only the two bindings that need a calculation (the percentages and the health color).
 
 ## Bindings
 
@@ -203,20 +203,55 @@ public static class MyBindings
 Bind.Width(panel, viewModel.PanelWidth);
 ```
 
+## View Bindings (no code)
+
+Like the View Bindings panel of UMG, bindings can be configured in the widget's inspector instead of `OnBind`. A widget can then be just:
+
+```csharp
+public sealed class PlayerHUD : Widget<PlayerViewModel> { }
+```
+
+Each row of **View Bindings** reads *ViewModel member → widget property*:
+
+- **Member**: a public property or field of the ViewModel that is an `Observable<T>`, `IReadOnlyObservable<T>` or `Command`, listed with its type (`Health (float)`, `Volume (float, writable)`, `Respawn (Command)`).
+- **Target**: drag the widget's GameObject or component.
+- **Property**: only what fits the member's type, grouped by component (`Image/Fill`, `Slider/Value (two-way)`, `GameObject/Active`, `Button/Click`). Picking one also picks the right component.
+- **Options**: *Format* for numbers shown as text (`"Score {0}"`, `"{0:2}"`), *Invert* for true/false values (`Muted` → `Slider/Interactable` inverted).
+
+View Bindings run right after `OnBind`, so both can be combined: keep in code only what needs a calculation. They compile into the same typed bindings as `Bind.*`, so they keep the zero-allocation guarantees (resolved once per widget and cached).
+
+Renaming a ViewModel member breaks the bindings that use it, as in Unreal. The row turns red with the reason, and the validation (Play warning, failing build, Validation window) reports it. For IL2CPP builds, the ViewModel types of your widgets are kept from code stripping automatically (a generated `link.xml`).
+
+Your own widget properties can be offered to View Bindings too:
+
+```csharp
+#if UNITY_EDITOR
+[UnityEditor.InitializeOnLoadMethod]
+#endif
+[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+private static void RegisterMyBinders()
+{
+    ViewBinders.Register<RectTransform, float>("Width", static (bind, rect, width) => bind.Width(rect, width));
+}
+```
+
+Lists (`Bind.List`), child widgets (`Bind.Child`) and parameterized commands are bound in code.
+
 ## Editor tools
 
 ### Widget inspector
 
 Every `Widget<TViewModel>` gets its own inspector:
 
-- **Status**: which ViewModel it expects and whether every required widget is bound.
+- **Status**: which ViewModel it expects, and whether every required widget is bound and every View Binding works.
 - **Widgets**: each `[BindWidget]` field with a mark (accent = bound, red = required and empty, grey = optional and empty).
+- **View Bindings**: bindings without code (see above).
 - **Auto-assign by name**: fills the empty fields with the child named like the field, as Unreal's BindWidget does. `healthBar` finds `Health Bar`, `HealthBar`, `health_bar`, or the name plus a widget word (`Health Bar Image`, `Respawn Button`). It never overwrites a field that is set, leaves a field empty when two children match, does not look inside nested widgets, and supports Undo.
 - **ViewModel** (Play mode): the live values of the bound ViewModel. Edit an `Observable<T>` to push a value to the widgets, run a `Command` with its Execute button, and see how many bindings each property has.
 
 ### Validation
 
-A required `[BindWidget]` left empty is reported like a missing BindWidget in Unreal. **Project Settings → ObserverVM** chooses how strict it is:
+A required `[BindWidget]` left empty, or a View Binding that cannot work, is reported like a missing BindWidget in Unreal. **Project Settings → ObserverVM** chooses how strict it is:
 
 | When | Default | Options |
 |---|---|---|
@@ -224,7 +259,7 @@ A required `[BindWidget]` left empty is reported like a missing BindWidget in Un
 | Building | Stop: the build fails with the list of empty fields | Ignore, Warn, Stop |
 | Check prefabs on build | On: every prefab under `Assets` is checked too | On, Off |
 
-**Window → ObserverVM → Validation** lists every empty required field in the open scenes and/or prefabs, with **Select** and **Auto-assign by name** buttons.
+**Window → ObserverVM → Validation** lists every empty required field and broken View Binding in the open scenes and/or prefabs, with **Select** (and **Auto-assign by name** for empty fields) buttons.
 
 ### Debugger
 

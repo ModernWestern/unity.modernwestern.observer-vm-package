@@ -7,12 +7,14 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 {
     /// <summary>
     /// Inspector of every <see cref="Widget{TViewModel}"/>: the [BindWidget] references with their status and Auto-assign by name,
-    /// the rest of the fields, and in Play mode a live view of the bound ViewModel.
+    /// the View Bindings (bindings without code), the rest of the fields, and in Play mode a live view of the bound ViewModel.
     /// </summary>
     [CustomEditor(typeof(Widget), true), CanEditMultipleObjects]
     internal sealed class WidgetEditor : UnityEditor.Editor
     {
         private AutoAssignReport _lastReport;
+
+        private ViewBindingsSection _viewBindings;
 
         public override bool RequiresConstantRepaint() => Application.isPlaying;
 
@@ -35,6 +37,10 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
             {
                 DrawWidgets_Internal(fields);
             }
+
+            _viewBindings ??= new ViewBindingsSection(serializedObject, widget.ViewModelType);
+
+            _viewBindings.Draw(targets.Length > 1);
 
             var excluded = fields.Select(field => field.Name).Append("m_Script").ToArray();
 
@@ -71,11 +77,26 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             var empty = targets.Cast<Widget>().Sum(each => required.Count(field => !field.IsAssigned(each)));
 
+            var broken = targets.Cast<Widget>().Sum(each => each.ViewBindings.Count(binding => ViewBindingValidation.Problem(each.ViewModelType, binding) != null));
+
             EditorGUILayout.Space(4);
 
             var rect = EditorGUILayout.GetControlRect();
 
-            var text = required.Length == 0 ? "No required widgets" : empty == 0 ? "All required widgets bound" : $"{empty} required widget(s) empty";
+            string text;
+
+            if (empty > 0)
+            {
+                text = broken > 0 ? $"{empty} empty widget(s), {broken} broken binding(s)" : $"{empty} required widget(s) empty";
+            }
+            else if (broken > 0)
+            {
+                text = $"{broken} broken view binding(s)";
+            }
+            else
+            {
+                text = required.Length == 0 && widget.ViewBindings.Count == 0 ? "Nothing bound yet" : "Everything bound";
+            }
 
             var size = ObserverVMStyles.ChipSize(text);
 
@@ -83,7 +104,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width - size.x - 6f, rect.height), "View of", widget.ViewModelType.Name, EditorStyles.boldLabel);
 
-            ObserverVMStyles.DrawChip(chip, text, empty == 0 ? ObserverVMStyles.Accent : ObserverVMStyles.Error);
+            ObserverVMStyles.DrawChip(chip, text, empty + broken == 0 ? ObserverVMStyles.Accent : ObserverVMStyles.Error);
         }
 
         private void DrawWidgets_Internal(IReadOnlyList<BindWidgetField> fields)

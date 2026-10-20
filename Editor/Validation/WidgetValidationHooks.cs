@@ -46,7 +46,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             EditorApplication.isPlaying = false;
 
-            Debug.LogError($"[ObserverVM] Play was stopped: {issues.Count} required widget reference(s) are empty. Fill them (or change Project Settings > ObserverVM > When pressing Play).");
+            Debug.LogError($"[ObserverVM] Play was stopped: {issues.Count} widget problem(s) (empty [BindWidget] fields or broken view bindings). Fix them, or change Project Settings > ObserverVM > When pressing Play.");
         }
     }
 
@@ -87,7 +87,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
                 return;
             }
 
-            var message = $"[ObserverVM] {issues.Count} required widget reference(s) are empty in {what}:\n{BindWidgetValidator.Describe(issues)}";
+            var message = $"[ObserverVM] {issues.Count} widget problem(s) in {what}:\n{BindWidgetValidator.Describe(issues)}";
 
             if (ObserverVMSettings.instance.OnBuild == MissingWidgetPolicy.Block)
             {

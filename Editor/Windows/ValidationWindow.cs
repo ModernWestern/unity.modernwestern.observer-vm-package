@@ -69,7 +69,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             var rect = EditorGUILayout.GetControlRect();
 
-            var text = _issues.Count == 0 ? $"All required widgets are bound in {_checked}" : $"{_issues.Count} required widget(s) empty in {_checked}";
+            var text = _issues.Count == 0 ? $"No problems in {_checked}" : $"{_issues.Count} problem(s) in {_checked}";
 
             var size = ObserverVMStyles.ChipSize(text);
 
@@ -98,7 +98,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"\"{issue.Field.DisplayName}\" is empty ({issue.Field.Type.Name} needed)", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(issue.Title, new GUIStyle(EditorStyles.boldLabel) { wordWrap = true });
 
                 EditorGUILayout.LabelField($"{issue.HierarchyPath}  ·  {issue.Component.GetType().Name}  ·  {issue.Location}", ObserverVMStyles.MutedLabel);
 
@@ -113,7 +113,7 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
                         EditorGUIUtility.PingObject(issue.Component.gameObject);
                     }
 
-                    if (GUILayout.Button("Auto-assign by name", EditorStyles.miniButton, GUILayout.Width(140)))
+                    if (issue.Field != null && GUILayout.Button("Auto-assign by name", EditorStyles.miniButton, GUILayout.Width(140)))
                     {
                         BindWidgetAutoAssigner.Assign(issue.Component);
 

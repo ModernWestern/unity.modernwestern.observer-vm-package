@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ModernWestern.UI.ObserverVM
 {
@@ -9,6 +10,20 @@ namespace ModernWestern.UI.ObserverVM
     /// </summary>
     public abstract class Widget : MonoBehaviour
     {
+        [SerializeField, HideInInspector]
+        private ViewBinding[] viewBindings = Array.Empty<ViewBinding>();
+
+        /// <summary>
+        /// Bindings configured in the Inspector (View Bindings). They are applied right after <c>OnBind</c>.
+        /// </summary>
+        public IReadOnlyList<ViewBinding> ViewBindings => viewBindings;
+
+        internal ViewBinding[] ViewBindingArray
+        {
+            get => viewBindings;
+            set => viewBindings = value ?? Array.Empty<ViewBinding>();
+        }
+
         /// <summary>
         /// The ViewModel currently bound, or null.
         /// </summary>
@@ -58,13 +73,18 @@ namespace ModernWestern.UI.ObserverVM
             if (viewModel != null)
             {
                 OnBind(viewModel);
+
+                ViewBindingResolver<TViewModel>.Apply(Bind, viewModel, ViewBindingArray, this);
             }
         }
 
         /// <summary>
-        /// Declare the bindings here, e.g. <c>Bind.Text(nickname, viewModel.Nickname);</c>
+        /// Declare the bindings in code here, e.g. <c>Bind.Text(nickname, viewModel.Nickname);</c>
+        /// Optional: bindings can also be configured in the Inspector (View Bindings), which run right after this.
         /// </summary>
-        protected abstract void OnBind(TViewModel viewModel);
+        protected virtual void OnBind(TViewModel viewModel)
+        {
+        }
 
         /// <summary>
         /// Called before the bindings to <paramref name="viewModel"/> are removed.

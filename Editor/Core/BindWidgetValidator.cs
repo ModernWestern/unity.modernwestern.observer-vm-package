@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace ModernWestern.UI.ObserverVM.EditorTools
 {
     /// <summary>
-    /// A required <see cref="BindWidgetAttribute"/> field that is empty.
+    /// A required <see cref="BindWidgetAttribute"/> field that is empty, or a View Binding that cannot work.
     /// </summary>
     public readonly struct BindWidgetIssue
     {
@@ -17,12 +17,39 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
             Field = field;
 
+            Binding = null;
+
+            Problem = null;
+
+            Location = location;
+        }
+
+        public BindWidgetIssue(Component component, ViewBinding binding, string problem, string location)
+        {
+            Component = component;
+
+            Field = null;
+
+            Binding = binding;
+
+            Problem = problem;
+
             Location = location;
         }
 
         public Component Component { get; }
 
+        /// <summary>
+        /// The empty [BindWidget] field, or null for a View Binding issue.
+        /// </summary>
         public BindWidgetField Field { get; }
+
+        /// <summary>
+        /// The broken View Binding, or null for an empty [BindWidget] field.
+        /// </summary>
+        public ViewBinding Binding { get; }
+
+        public string Problem { get; }
 
         /// <summary>
         /// Scene or prefab path the component lives in.
@@ -31,7 +58,11 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
 
         public string HierarchyPath => BindWidgetValidator.HierarchyPath(Component.transform);
 
-        public string Message => $"{HierarchyPath} ({Component.GetType().Name}): \"{Field.DisplayName}\" is empty ({Field.Type.Name} needed). Drag one in, or use Auto-assign by name.";
+        public string Title => Field != null ? $"\"{Field.DisplayName}\" is empty ({Field.Type.Name} needed)" : $"View binding \"{Binding}\": {Problem}";
+
+        public string Message => Field != null
+            ? $"{HierarchyPath} ({Component.GetType().Name}): \"{Field.DisplayName}\" is empty ({Field.Type.Name} needed). Drag one in, or use Auto-assign by name."
+            : $"{HierarchyPath} ({Component.GetType().Name}): view binding \"{Binding}\" cannot work: {Problem} Fix it in the View Bindings of the widget.";
     }
 
     /// <summary>
@@ -53,13 +84,26 @@ namespace ModernWestern.UI.ObserverVM.EditorTools
                     issues.Add(new BindWidgetIssue(component, field, location));
                 }
             }
+
+            if (component is not Widget widget)
+            {
+                return;
+            }
+
+            foreach (var binding in widget.ViewBindings)
+            {
+                if (ViewBindingValidation.Problem(widget.ViewModelType, binding) is { } problem)
+                {
+                    issues.Add(new BindWidgetIssue(component, binding, problem, location));
+                }
+            }
         }
 
         public static void ValidateHierarchy(GameObject root, string location, List<BindWidgetIssue> issues)
         {
             foreach (var component in root.GetComponentsInChildren<MonoBehaviour>(true))
             {
-                if (component != null && BindWidgetFields.HasAny(component.GetType()))
+                if (component != null && (component is Widget || BindWidgetFields.HasAny(component.GetType())))
                 {
                     Validate(component, location, issues);
                 }

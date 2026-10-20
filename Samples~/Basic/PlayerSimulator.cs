@@ -25,7 +25,7 @@ namespace ModernWestern.UI.ObserverVM.Samples
 
         private void Update()
         {
-            if (_player.IsDead)
+            if (_player.IsDead.Value)
             {
                 return;
             }

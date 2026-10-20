@@ -224,6 +224,72 @@ namespace ModernWestern.UI.ObserverVM.Tests
             scope.Dispose();
         }
 
+        [Test]
+        public void ViewBindings_RebindAndChanges_DoNotAllocate()
+        {
+            var image = Create<UnityEngine.UI.Image>();
+
+            var slider = Create<UnityEngine.UI.Slider>();
+
+            var button = Create<UnityEngine.UI.Button>();
+
+            var label = Create<UnityEngine.UI.Text>();
+
+            var panel = CreateObject("Panel");
+
+            var widget = Create<ViewBoundWidget>();
+
+            widget.ViewBindingArray = new[]
+            {
+                new ViewBinding("Health", image, "Fill"),
+                new ViewBinding("Volume", slider, "Value"),
+                new ViewBinding("Respawn", button, "Click"),
+                new ViewBinding("Visible", panel, "Active", invert: true)
+            };
+
+            var row = Create<ViewBoundRow>();
+
+            row.ViewBindingArray = new[] { new ViewBinding("Name", label, "Text") };
+
+            // Warm up: the first binds resolve and cache the View Bindings (fields and properties).
+            widget.SetViewModel(new TestViewModel());
+
+            widget.SetViewModel(new TestViewModel());
+
+            row.SetViewModel(new TestItem("a"));
+
+            row.SetViewModel(new TestItem("b"));
+
+            // UnityEvent builds its listener list the first time it fires after AddListener (one-time, inside Unity).
+            slider.value = 0.1f;
+
+            var fresh = new TestViewModel();
+
+            var item = new TestItem("c");
+
+            Assert.That(() =>
+            {
+                widget.SetViewModel(fresh);
+
+                row.SetViewModel(item);
+            }, Is.Not.AllocatingGCMemory());
+
+            Assert.That(() =>
+            {
+                fresh.Health.Value = 0.25f;
+
+                fresh.Visible.Value = false;
+
+                slider.value = 0.75f;
+            }, Is.Not.AllocatingGCMemory());
+
+            Assert.AreEqual(0.25f, image.fillAmount);
+
+            Assert.IsTrue(panel.activeSelf);
+
+            Assert.AreEqual(0.75f, fresh.Volume.Value);
+        }
+
 #if OBSERVERVM_TMP
         [Test]
         public void TmpNumbers_DoNotAllocate()

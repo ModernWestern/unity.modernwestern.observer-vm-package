@@ -2108,16 +2108,55 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f035c9056dccfaa4196301a0dc8201d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nickname: {fileID: 557562558778012959}
-  score: {fileID: 6577283233043267047}
+  viewBindings:
+  - source: Nickname
+    target: {fileID: 557562558778012959}
+    property: Text
+    format: 
+    invert: 0
+  - source: Score
+    target: {fileID: 6577283233043267047}
+    property: Text
+    format: Score {0}
+    invert: 0
+  - source: Health
+    target: {fileID: 1506431937594404375}
+    property: Fill
+    format: 
+    invert: 0
+  - source: Volume
+    target: {fileID: 7206957117834592130}
+    property: Value
+    format: 
+    invert: 0
+  - source: Muted
+    target: {fileID: 4131737891243460290}
+    property: IsOn
+    format: 
+    invert: 0
+  - source: Muted
+    target: {fileID: 7206957117834592130}
+    property: Interactable
+    format: 
+    invert: 1
+  - source: Hit
+    target: {fileID: 7357343160920872948}
+    property: Click
+    format: 
+    invert: 0
+  - source: Respawn
+    target: {fileID: 6218407135090773828}
+    property: Click
+    format: 
+    invert: 0
+  - source: IsDead
+    target: {fileID: 5624941119441225768}
+    property: Active
+    format: 
+    invert: 0
   healthBar: {fileID: 1506431937594404375}
   healthLabel: {fileID: 7097012419608877640}
-  volume: {fileID: 7206957117834592130}
   volumeLabel: {fileID: 4615948406080083295}
-  muted: {fileID: 4131737891243460290}
-  hit: {fileID: 7357343160920872948}
-  respawn: {fileID: 6218407135090773828}
-  deathScreen: {fileID: 5624941119441225768}
   healthyColor: {r: 0.3, g: 0.85, b: 0.45, a: 1}
   criticalColor: {r: 0.95, g: 0.3, b: 0.3, a: 1}
 --- !u!1 &7521737770866271600

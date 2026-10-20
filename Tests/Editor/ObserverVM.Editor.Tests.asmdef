@@ -20,8 +20,15 @@
     ],
     "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+        "UNITY_INCLUDE_TESTS",
+        "OBSERVERVM_TEST_FRAMEWORK"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.0.0",
+            "define": "OBSERVERVM_TEST_FRAMEWORK"
+        }
+    ],
     "noEngineReferences": false
 }
