@@ -28,6 +28,8 @@ Package Manager → **Add package from git URL**:
 https://github.com/ModernWestern/unity.modernwestern.observer-vm-package.git
 ```
 
+To pin a version, add its tag: `...observer-vm-package.git#v2.0.0`. The 1.x API (`Observer`, `[Bindable]`) stays available at `#v1.1.4` (see [Migrating from 1.x](#migrating-from-1x)).
+
 Requires Unity 2021.3+ and UGUI. TextMeshPro bindings are enabled automatically when TextMeshPro is installed (always the case in Unity 6).
 
 ## Quick start
