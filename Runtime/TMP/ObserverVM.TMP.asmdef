@@ -1,0 +1,28 @@
+{
+    "name": "ObserverVM.TMP",
+    "rootNamespace": "ModernWestern.UI.ObserverVM",
+    "references": [
+        "ObserverVM",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.textmeshpro",
+            "expression": "3.0.0",
+            "define": "OBSERVERVM_TMP"
+        },
+        {
+            "name": "com.unity.ugui",
+            "expression": "2.0.0",
+            "define": "OBSERVERVM_TMP"
+        }
+    ],
+    "noEngineReferences": false
+}

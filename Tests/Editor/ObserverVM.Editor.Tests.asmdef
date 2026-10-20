@@ -1,0 +1,34 @@
+{
+    "name": "ObserverVM.Editor.Tests",
+    "rootNamespace": "ModernWestern.UI.ObserverVM.EditorTools.Tests",
+    "references": [
+        "ObserverVM",
+        "ObserverVM.Editor",
+        "ObserverVM.Tests",
+        "UnityEngine.UI",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "OBSERVERVM_TEST_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "1.0.0",
+            "define": "OBSERVERVM_TEST_FRAMEWORK"
+        }
+    ],
+    "noEngineReferences": false
+}
